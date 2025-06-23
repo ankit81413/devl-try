@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>frontend</title>
+</head>
+
+<body>
+    <div class="conteiner">
+        <a href="index.html">Home</a>
+        <a href="login.html" id="login">Login</a> <br><br>
+        <h1>SignUP</h1><br>
+        <input type="text" placeholder="Name" id="name">
+        <input type="text" placeholder="emal" id="email">
+        <input type="text" placeholder="pass" id="pass">
+        <button onclick="Signup()">Click</button>
+    </div>
+</body>
+
+<script>
+    function Signup() {
+
+        let name = document.getElementById("name").value;
+        let email = document.getElementById("email").value;
+        let pass = document.getElementById("pass").value;
+
+        console.log("sign up started");
+
+
+        fetch('http://localhost:3000/signup', {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name, email: email, password: pass })
+        })
+            // .then(res => res.json())
+            .then(async res => {
+
+                const data = await res.json();
+                if (!res.ok) {
+                    if (res.status === 409) {
+                        login_required();
+                    }
+                    // Handle HTTP errors but still get message from server
+                    throw new Error(data.message || 'Unknown error');
+                }
+                // return res.json();
+                return data;
+            })
+            .then(data => got_ok_responce(data))
+            .catch(err => console.error(err));
+
+
+    }
+
+
+
+
+    
+    function storedata(token) {
+        localStorage.setItem("login_status", "1");
+        localStorage.setItem("jwt_tocken", token);
+        console.log('token is : ' + token);
+    }
+
+    function isTokenExpired(token) {
+        if (!token) return true;
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const exp = payload.exp;
+        const now = Math.floor(Date.now() / 1000);
+        return now >= exp;
+    }
+
+    function login_required() {
+        document.getElementById('login').style.fontSize = "30px";
+    }
+
+
+    function got_ok_responce(data) {
+        storedata(data.token)
+        console.log(data);
+
+    }
+
+</script>
+
+</html>

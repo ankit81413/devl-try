@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>frontend</title>
+</head>
+
+<body>
+    <div class="conteiner">
+        <a href="index.html">Home</a>
+        <a href="signup.html">SignUp</a>
+        <br><br>
+        <h1>Login</h1>
+        <br>
+        <input type="text" placeholder="emal" id="email">
+        <input type="text" placeholder="pass" id="pass">
+        <button onclick="login()">Click</button>
+    </div>
+</body>
+
+<script>
+    function login() {
+
+        let token = localStorage.getItem("jwt_tocken");
+
+        if (!token || isTokenExpired(token)) {
+
+            let email = document.getElementById("email").value;
+            let pass = document.getElementById('pass').value;
+
+            fetch('http://localhost:3000/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, password: pass })
+            })
+                .then(async res => {
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                        if (res.status === 409) {
+                            login_required();
+                        }
+                        // Handle HTTP errors but still get message from server
+                        // throw new Error(data.message || 'Unknown error');
+                    }
+                    // return res.json();
+                    return data;
+                })
+                .then(data => storedata(data))
+                .catch(err => console.error(err));
+
+        } else {
+            console.log("User already logged.");
+        }
+    }
+
+    function storedata(data) {
+        console.log(data);
+        
+        let token = data.token
+        localStorage.setItem("login_status", "1");
+        localStorage.setItem("jwt_tocken", token);
+        console.log('token is : ' + token);
+    }
+
+    function isTokenExpired(token) {
+        if (!token) return true;
+
+        const parts = token.split('.');
+        if (parts.length !== 3) return true;  // invalid token format
+
+        const base64Url = parts[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/').padEnd(base64Url.length + (4 - base64Url.length % 4) % 4, '=');
+
+        try {
+            const payload = JSON.parse(atob(base64));
+            const exp = payload.exp;
+            const now = Math.floor(Date.now() / 1000);
+            return now >= exp;
+        } catch (e) {
+            console.error("Invalid token payload", e);
+            return true; // treat as expired if invalid
+        }
+    }
+
+
+
+
+</script>
+
+</html>
