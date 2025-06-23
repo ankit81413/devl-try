@@ -61,6 +61,7 @@
         console.log(data);
         
         let token = data.token
+        document.getElementById("ddd").innerText=token;
         localStorage.setItem("login_status", "1");
         localStorage.setItem("jwt_tocken", token);
         console.log('token is : ' + token);
